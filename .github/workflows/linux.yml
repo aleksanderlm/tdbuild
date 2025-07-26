@@ -21,14 +21,14 @@ jobs:
       PATCH_URL: https://raw.githubusercontent.com/aleksanderlm/tdbuild/refs/heads/main/clean.patch
 
     steps:
-      - name: Clone Official Repo (into Telegram/)
+      - name: Clone Official Repo
         run: |
-          git clone --recursive https://github.com/telegramdesktop/tdesktop.git Telegram
+          git clone --recursive https://github.com/telegramdesktop/tdesktop.git tdesktop
 
       - name: Apply Patch
         run: |
           curl -sSL $PATCH_URL -o patch.patch
-          cd Telegram
+          cd tdesktop
           git apply ../patch.patch || { echo 'Patch failed to apply'; exit 1; }
 
       - name: Free up disk space
@@ -42,7 +42,7 @@ jobs:
           sudo apt install -y python3-pip
           curl -sSL https://install.python-poetry.org | python3 -
           echo "$HOME/.local/bin" >> $GITHUB_PATH
-          cd Telegram/build/docker/centos_env
+          cd tdesktop/Telegram/build/docker/centos_env
           $HOME/.local/bin/poetry install
           DOCKERFILE=$(DEBUG= LTO= $HOME/.local/bin/poetry run gen_dockerfile)
           echo "$DOCKERFILE" > Dockerfile
@@ -54,13 +54,13 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/.buildx-cache
-          key: ${{ runner.OS }}-libs-${{ hashFiles('Telegram/build/docker/centos_env/**') }}
+          key: ${{ runner.OS }}-libs-${{ hashFiles('tdesktop/Telegram/build/docker/centos_env/**') }}
           restore-keys: ${{ runner.OS }}-libs-
 
       - name: Libraries
         uses: docker/build-push-action@v6
         with:
-          context: Telegram/build/docker/centos_env
+          context: tdesktop/Telegram/build/docker/centos_env
           load: ${{ env.ONLY_CACHE == 'false' }}
           tags: ${{ env.IMAGE_TAG }}
           cache-from: type=local,src=${{ runner.temp }}/.buildx-cache
@@ -72,10 +72,10 @@ jobs:
           mv ${{ runner.temp }}/.buildx-cache{-new,}
 
       - name: Make configure.sh executable
-        run: chmod +x Telegram/configure.sh
+        run: chmod +x tdesktop/Telegram/configure.sh
 
       - name: Make build.sh executable
-        run: chmod +x Telegram/build/docker/centos_env/build.sh
+        run: chmod +x tdesktop/Telegram/build/docker/centos_env/build.sh
 
       - name: Telegram Desktop build
         if: env.ONLY_CACHE == 'false'
@@ -93,7 +93,7 @@ jobs:
 
           docker run --rm \
             -u $(id -u) \
-            -v $PWD/Telegram:/usr/src/tdesktop \
+            -v $PWD/tdesktop:/usr/src/tdesktop \
             -e CONFIG=Release \
             $IMAGE_TAG \
             /usr/src/tdesktop/Telegram/build/docker/centos_env/build.sh \
@@ -109,7 +109,7 @@ jobs:
       - name: Check
         if: env.ONLY_CACHE == 'false'
         run: |
-          filePath="Telegram/out/Release/Telegram"
+          filePath="tdesktop/Telegram/out/Release/Telegram"
           if test -f "$filePath"; then
             echo "Build successfully done! :)"
             size=$(stat -c %s "$filePath")
@@ -122,7 +122,7 @@ jobs:
       - name: Move artifact
         if: env.UPLOAD_ARTIFACT == 'true'
         run: |
-          cd Telegram/out/Release
+          cd tdesktop/Telegram/out/Release
           mkdir artifact
           mv {Telegram,Updater} artifact/
 
@@ -131,4 +131,4 @@ jobs:
         name: Upload artifact
         with:
           name: ${{ env.ARTIFACT_NAME }}
-          path: Telegram/out/Release/artifact/
+          path: tdesktop/Telegram/out/Release/artifact/
