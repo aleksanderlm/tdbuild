@@ -46,7 +46,7 @@ jobs:
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
           
-          cd Telegram
+          cd tdesktop
           ./configure.sh
 
           cd build/docker/centos_env
