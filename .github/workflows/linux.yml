@@ -44,7 +44,12 @@ jobs:
           sudo apt install -y python3-pip
           curl -sSL https://install.python-poetry.org | python3 -
           echo "$HOME/.local/bin" >> $GITHUB_PATH
-          cd Telegram/build/docker/centos_env
+
+          
+          cd Telegram
+          ./configure.sh
+
+          cd build/docker/centos_env
           $HOME/.local/bin/poetry install
           DOCKERFILE=$(DEBUG= LTO= $HOME/.local/bin/poetry run gen_dockerfile)
           echo "$DOCKERFILE" > Dockerfile
