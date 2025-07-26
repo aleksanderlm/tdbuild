@@ -30,7 +30,7 @@ jobs:
       - name: Apply Patch
         run: |
           curl -sSL $PATCH_URL -o patch.patch
-          cd Telegram
+          cd tdesktop
           git apply ../patch.patch || { echo 'Patch failed to apply'; exit 1; }
 
       - name: Free up disk space
@@ -46,7 +46,7 @@ jobs:
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
           
-          cd tdesktop
+          cd tdesktop/Telegram
           ./configure.sh
 
           cd build/docker/centos_env
