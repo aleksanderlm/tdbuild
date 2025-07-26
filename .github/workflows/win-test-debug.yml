@@ -1,4 +1,4 @@
-name: Windows Build from Upstream with Patch
+name: Windows test patch
 
 on:
   workflow_dispatch:
