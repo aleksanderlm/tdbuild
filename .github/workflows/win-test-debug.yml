@@ -1,0 +1,70 @@
+name: Windows Build from Upstream with Patch
+
+on:
+  workflow_dispatch:
+
+jobs:
+  windows:
+    name: Windows x64 Build
+    runs-on: windows-latest
+
+    env:
+      PATCH_URL: "https://raw.githubusercontent.com/aleksanderlm/tdbuild/refs/heads/main/clean.patch"
+      UPSTREAM_REPO: "https://github.com/telegramdesktop/tdesktop.git"
+      UPLOAD_ARTIFACT: "true"
+      ONLY_CACHE: "false"
+      PREPARE_PATH: "Telegram/build/prepare/prepare.py"
+      TDESKTOP_BUILD_ARCH: "x64"
+      TDESKTOP_BUILD_GENERATOR: ""
+      TDESKTOP_BUILD_DEFINE: ""
+      TDESKTOP_BUILD_API: "-D TDESKTOP_API_TEST=ON"
+      ARTIFACT_NAME: "Telegram_x64"
+
+    defaults:
+      run:
+        shell: cmd
+
+    steps:
+      - name: Prepare directories
+        run: |
+          mkdir %userprofile%\TBuild\Libraries
+          mklink /d %GITHUB_WORKSPACE%\TBuild %userprofile%\TBuild
+          echo TBUILD=%GITHUB_WORKSPACE%\TBuild>>%GITHUB_ENV%
+
+      - uses: ilammy/msvc-dev-cmd@v1.13.0
+        name: MSVC Dev Cmd
+        with:
+          arch: x64
+
+      - name: Clone upstream tdesktop
+        run: |
+          git clone --recursive %UPSTREAM_REPO% %TBUILD%\tdesktop
+
+      - name: Set up Git config
+        run: |
+          git config --global user.email "actions@example.com"
+          git config --global user.name "GitHub Actions"
+
+      - name: Download patch
+        run: curl -L %PATCH_URL% -o %TBUILD%\patch.patch
+
+      - name: Apply patch
+        run: |
+          cd %TBUILD%\tdesktop
+          git apply --check %TBUILD%\patch.patch
+          if errorlevel 1 exit /b 1
+          git apply %TBUILD%\patch.patch
+
+      - name: Inject windowsapp.lib into Telegram CMakeLists
+        run: |
+          cd %TBUILD%\tdesktop
+          echo.>> Telegram\CMakeLists.txt
+          echo if (WIN32)>> Telegram\CMakeLists.txt
+          echo   target_link_libraries\(Telegram PRIVATE windowsapp\)>> Telegram\CMakeLists.txt
+          echo endif\(\)>> Telegram\CMakeLists.txt
+
+      - name: Upload patched CMakeLists.txt as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Patched-CMakeLists
+          path: ${{ env.TBUILD }}\tdesktop\Telegram\CMakeLists.txt
