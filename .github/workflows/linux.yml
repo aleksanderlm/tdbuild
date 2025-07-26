@@ -2,7 +2,6 @@ name: Linux Release Build (Patched)
 
 on:
   workflow_dispatch:
- 
 
 jobs:
   linux:
@@ -23,7 +22,10 @@ jobs:
 
     steps:
       - name: Clone Official Repo
-        run: git clone --recursive https://github.com/telegramdesktop/tdesktop.git Telegram
+        run: |
+          git clone https://github.com/telegramdesktop/tdesktop.git Telegram
+          cd Telegram
+          git submodule update --init --recursive
 
       - name: Apply Patch
         run: |
