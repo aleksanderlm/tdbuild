@@ -23,8 +23,8 @@ jobs:
     steps:
       - name: Clone Official Repo
         run: |
-          git clone https://github.com/telegramdesktop/tdesktop.git Telegram
-          cd Telegram
+          git clone https://github.com/telegramdesktop/tdesktop.git
+          cd tdesktop
           git submodule update --init --recursive
 
       - name: Apply Patch
