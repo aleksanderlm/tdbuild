@@ -21,15 +21,14 @@ jobs:
       PATCH_URL: https://raw.githubusercontent.com/aleksanderlm/tdbuild/refs/heads/main/clean.patch
 
     steps:
-      - name: Clone Official Repo
+      - name: Clone Official Repo (into Telegram/)
         run: |
-          git clone --recursive https://github.com/telegramdesktop/tdesktop.git
-          
+          git clone --recursive https://github.com/telegramdesktop/tdesktop.git Telegram
 
       - name: Apply Patch
         run: |
           curl -sSL $PATCH_URL -o patch.patch
-          cd tdesktop
+          cd Telegram
           git apply ../patch.patch || { echo 'Patch failed to apply'; exit 1; }
 
       - name: Free up disk space
@@ -43,12 +42,7 @@ jobs:
           sudo apt install -y python3-pip
           curl -sSL https://install.python-poetry.org | python3 -
           echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-          
-          cd tdesktop/Telegram
-          ./configure.sh
-
-          cd build/docker/centos_env
+          cd Telegram/build/docker/centos_env
           $HOME/.local/bin/poetry install
           DOCKERFILE=$(DEBUG= LTO= $HOME/.local/bin/poetry run gen_dockerfile)
           echo "$DOCKERFILE" > Dockerfile
