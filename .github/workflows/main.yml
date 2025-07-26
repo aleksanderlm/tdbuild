@@ -59,7 +59,10 @@ jobs:
       - name: Inject windowsapp.lib into Telegram CMakeLists
         run: |
           cd %TBUILD%\tdesktop
-          echo -e "\nif (WIN32)\n  target_link_libraries(Telegram PRIVATE windowsapp)\nendif()" >> Telegram/CMakeLists.txt
+          echo.>> Telegram\CMakeLists.txt
+          echo if (WIN32)>> Telegram\CMakeLists.txt
+          echo   target_link_libraries(Telegram PRIVATE windowsapp)>> Telegram\CMakeLists.txt
+          echo endif()>> Telegram\CMakeLists.txt
 
 
       - name: Generate cache key
