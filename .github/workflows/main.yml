@@ -56,6 +56,12 @@ jobs:
           if errorlevel 1 exit /b 1
           git apply %TBUILD%\patch.patch
 
+      - name: Inject windowsapp.lib into Telegram CMakeLists
+        run: |
+          cd %TBUILD%\tdesktop
+          echo -e "\nif (WIN32)\n  target_link_libraries(Telegram PRIVATE windowsapp)\nendif()" >> Telegram/CMakeLists.txt
+
+
       - name: Generate cache key
         shell: bash
         run: echo "CACHE_KEY=$(sha256sum $TBUILD/tdesktop/$PREPARE_PATH | awk '{ print $1 }')" >> $GITHUB_ENV
