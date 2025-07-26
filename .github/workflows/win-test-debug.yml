@@ -60,8 +60,9 @@ jobs:
           cd %TBUILD%\tdesktop
           echo.>> Telegram\CMakeLists.txt
           echo if (WIN32)>> Telegram\CMakeLists.txt
-          echo   target_link_libraries\(Telegram PRIVATE windowsapp\)>> Telegram\CMakeLists.txt
-          echo endif\(\)>> Telegram\CMakeLists.txt
+          echo   target_link_libraries(Telegram PRIVATE windowsapp)>> Telegram\CMakeLists.txt
+          echo endif()>> Telegram\CMakeLists.txt
+
 
       - name: Upload patched CMakeLists.txt as artifact
         uses: actions/upload-artifact@v4
