@@ -108,7 +108,7 @@ jobs:
       - name: Check
         if: env.ONLY_CACHE == 'false'
         run: |
-          filePath="out/Release/Telegram"
+          filePath="tdesktop/out/Release/Telegram"
           if test -f "$filePath"; then
             echo "Build successfully done! :)"
             size=$(stat -c %s "$filePath")
@@ -121,7 +121,7 @@ jobs:
       - name: Move artifact
         if: env.UPLOAD_ARTIFACT == 'true'
         run: |
-          cd out/Release
+          cd tdesktop/out/Release
           mkdir artifact
           mv {Telegram,Updater} artifact/
 
