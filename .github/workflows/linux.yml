@@ -12,7 +12,6 @@ jobs:
       matrix:
         defines:
           - ""
-          - "DESKTOP_APP_DISABLE_X11_INTEGRATION"
 
     env:
       UPLOAD_ARTIFACT: "true"
