@@ -105,7 +105,7 @@ jobs:
             -D DESKTOP_APP_DISABLE_CRASH_REPORTS=ON \
             $DEFINE
 
-       - name: Check
+      - name: Check
         if: env.ONLY_CACHE == 'false'
         run: |
           filePath="out/Release/Telegram"
