@@ -1,4 +1,4 @@
-name: Linux Release Build (Patched)
+name: Linux Build from Upstream with Patch
 
 on:
   workflow_dispatch:
