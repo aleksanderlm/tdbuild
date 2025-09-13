@@ -27,6 +27,22 @@ index b907f1d..74af3e7 100644
 -	}
  	return false;
  }
+
+diff --git a/Telegram/SourceFiles/data/components/sponsored_messages.cpp b/Telegram/SourceFiles/data/components/sponsored_messages.cpp
+index 00ff9700e9..4aac1f536d 100644
+--- a/Telegram/SourceFiles/data/components/sponsored_messages.cpp
++++ b/Telegram/SourceFiles/data/components/sponsored_messages.cpp
+@@ -235,8 +235,7 @@ bool SponsoredMessages::canHaveFor(not_null<History*> history) const {
+ }
+ 
+ bool SponsoredMessages::canHaveFor(not_null<HistoryItem*> item) const {
+-	return item->history()->peer->isBroadcast()
+-		&& item->isRegular();
++	return false;
+ }
+ 
+ bool SponsoredMessages::isTopBarFor(not_null<History*> history) const {
+-- 
  
 diff --git "a/Telegram/SourceFiles/data/data_peer.cpp" "b/Telegram/SourceFiles/data/data_peer.cpp"
 index cbc27b5..a0d8e76 100644
