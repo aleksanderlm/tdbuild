@@ -106,3 +106,24 @@ index a11face..d63c688 100644
  	return nullptr;
  }
  
+Subject: [PATCH 17/17] Remove top bar suggestions with premium ads and
+ birthdays
+
+---
+ Telegram/SourceFiles/dialogs/dialogs_widget.cpp | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/Telegram/SourceFiles/dialogs/dialogs_widget.cpp b/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
+index 7e68503e4a..7bd0fcc6b7 100644
+--- a/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
++++ b/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
+@@ -695,7 +695,6 @@ Widget::Widget(
+ 	}
+ 
+ 	setupFrozenAccountBar();
+-	setupTopBarSuggestions(innerList);
+ }
+ 
+ void Widget::setupSwipeBack() {
+-- 
+2.51.2
