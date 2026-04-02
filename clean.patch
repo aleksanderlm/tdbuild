@@ -1,15 +1,17 @@
 diff --git a/Telegram/SourceFiles/data/components/sponsored_messages.cpp b/Telegram/SourceFiles/data/components/sponsored_messages.cpp
+index 4e68421fff..a6f59ccc0c 100644
 --- a/Telegram/SourceFiles/data/components/sponsored_messages.cpp
 +++ b/Telegram/SourceFiles/data/components/sponsored_messages.cpp
-@@ -241,12 +241,7 @@
+@@ -239,25 +239,14 @@ void SponsoredMessages::inject(
+ }
+ 
  bool SponsoredMessages::canHaveFor(not_null<History*> history) const {
 -	if (history->peer->isChannel()) {
 -		return true;
 -	} else if (const auto user = history->peer->asUser()) {
 -		return user->isBot();
 -	}
--	return false;
-+	return false;
+ 	return false;
  }
  
  bool SponsoredMessages::canHaveFor(not_null<HistoryItem*> item) const {
@@ -24,55 +26,77 @@ diff --git a/Telegram/SourceFiles/data/components/sponsored_messages.cpp b/Teleg
 -			return user->isBot();
 -		}
 -	}
--	return false;
-+	return false;
+ 	return false;
  }
+ 
 diff --git a/Telegram/SourceFiles/data/data_peer.cpp b/Telegram/SourceFiles/data/data_peer.cpp
+index 96cceb4d49..94927dd486 100644
 --- a/Telegram/SourceFiles/data/data_peer.cpp
 +++ b/Telegram/SourceFiles/data/data_peer.cpp
-@@ -1985,11 +1985,7 @@
+@@ -1983,11 +1983,6 @@ const Data::WallPaper *PeerData::wallPaper() const {
+ }
+ 
  bool PeerData::hasActiveStories() const {
 -	if (const auto user = asUser()) {
 -		return user->hasActiveStories();
 -	} else if (const auto channel = asChannel()) {
 -		return channel->hasActiveStories();
 -	}
--	return false;
-+	return false;
+ 	return false;
  }
+ 
 diff --git a/Telegram/SourceFiles/dialogs/dialogs_row.cpp b/Telegram/SourceFiles/dialogs/dialogs_row.cpp
+index 87ba11d6bb..e9f0f13705 100644
 --- a/Telegram/SourceFiles/dialogs/dialogs_row.cpp
 +++ b/Telegram/SourceFiles/dialogs/dialogs_row.cpp
-@@ -406,7 +406,7 @@
+@@ -403,7 +403,7 @@ void Row::PaintCornerBadgeFrame(
+ 	q.translate(framePadding, framePadding);
+ 	auto hq = std::optional<PainterHighQualityEnabler>();
  	const auto photoSize = context.st->photoSize;
 -	const auto storiesCount = data->storiesCount;
 +	const auto storiesCount = 0;
  	if (storiesCount) {
+ 		hq.emplace(q);
+ 		const auto line = st::dialogsStoriesFull.lineTwice / 2.;
 diff --git a/Telegram/SourceFiles/dialogs/dialogs_widget.cpp b/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
+index ec971de510..c27c210d54 100644
 --- a/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
 +++ b/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
-@@ -370,11 +370,7 @@
-- , _stories((_layout != Layout::Child)
-- 	? std::make_unique<Stories::List>(
-- 		this,
-- 		st::dialogsStoriesList,
-- 		_storiesContents.events() | rpl::flatten_latest())
-- 	: nullptr)
-+ , _stories(nullptr)
-@@ -726,7 +722,7 @@
+@@ -367,12 +367,7 @@ Widget::Widget(
+ 	object_ptr<Ui::IconButton>(this, st::dialogsLock))
+ , _scroll(this)
+ , _scrollToTop(_scroll, st::dialogsToUp)
+-, _stories((_layout != Layout::Child)
+-	? std::make_unique<Stories::List>(
+-		this,
+-		st::dialogsStoriesList,
+-		_storiesContents.events() | rpl::flatten_latest())
+-	: nullptr)
++, _stories(nullptr)
+ , _searchTimer([=] { search(); })
+ , _peerSearch(&controller->session(), Api::PeerSearch::Type::WithSponsored)
+ , _singleMessageSearch(&controller->session()) {
+@@ -723,7 +718,7 @@ Widget::Widget(
+ 	}
+ 
  	setupFrozenAccountBar();
 -	setupTopBarSuggestions();
-+	//setupTopBarSuggestions();
++	// setupTopBarSuggestions();
  }
+ 
+ void Widget::setupSwipeBack() {
 diff --git a/Telegram/SourceFiles/info/profile/info_profile_widget.cpp b/Telegram/SourceFiles/info/profile/info_profile_widget.cpp
+index d9d24bed01..a44c04e696 100644
 --- a/Telegram/SourceFiles/info/profile/info_profile_widget.cpp
 +++ b/Telegram/SourceFiles/info/profile/info_profile_widget.cpp
-@@ -209,10 +209,6 @@
+@@ -207,10 +207,6 @@ rpl::producer<QString> Widget::title() {
+ }
+ 
  rpl::producer<Dialogs::Stories::Content> Widget::titleStories() {
 -	const auto peer = controller()->key().peer();
 -	if (peer && !peer->isChat()) {
 -		return Dialogs::Stories::LastForPeer(peer);
 -	}
--	return nullptr;
-+	return nullptr;
+ 	return nullptr;
  }
+ 
