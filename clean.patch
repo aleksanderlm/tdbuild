@@ -1,107 +1,5 @@
-diff --git a/Telegram/SourceFiles/data/components/sponsored_messages.cpp b/Telegram/SourceFiles/data/components/sponsored_messages.cpp
-index 4e68421fff..a6f59ccc0c 100644
---- a/Telegram/SourceFiles/data/components/sponsored_messages.cpp
-+++ b/Telegram/SourceFiles/data/components/sponsored_messages.cpp
-@@ -239,25 +239,14 @@ void SponsoredMessages::inject(
- }
- 
- bool SponsoredMessages::canHaveFor(not_null<History*> history) const {
--	if (history->peer->isChannel()) {
--		return true;
--	} else if (const auto user = history->peer->asUser()) {
--		return user->isBot();
--	}
- 	return false;
- }
- 
- bool SponsoredMessages::canHaveFor(not_null<HistoryItem*> item) const {
--	return item->history()->peer->isBroadcast()
--		&& item->isRegular();
-+	return false;
- }
- 
- bool SponsoredMessages::isTopBarFor(not_null<History*> history) const {
--	if (peerIsUser(history->peer->id)) {
--		if (const auto user = history->peer->asUser()) {
--			return user->isBot();
--		}
--	}
- 	return false;
- }
- 
-diff --git a/Telegram/SourceFiles/data/data_peer.cpp b/Telegram/SourceFiles/data/data_peer.cpp
-index 96cceb4d49..94927dd486 100644
---- a/Telegram/SourceFiles/data/data_peer.cpp
-+++ b/Telegram/SourceFiles/data/data_peer.cpp
-@@ -1983,11 +1983,6 @@ const Data::WallPaper *PeerData::wallPaper() const {
- }
- 
- bool PeerData::hasActiveStories() const {
--	if (const auto user = asUser()) {
--		return user->hasActiveStories();
--	} else if (const auto channel = asChannel()) {
--		return channel->hasActiveStories();
--	}
- 	return false;
- }
- 
-diff --git a/Telegram/SourceFiles/dialogs/dialogs_row.cpp b/Telegram/SourceFiles/dialogs/dialogs_row.cpp
-index 87ba11d6bb..e9f0f13705 100644
---- a/Telegram/SourceFiles/dialogs/dialogs_row.cpp
-+++ b/Telegram/SourceFiles/dialogs/dialogs_row.cpp
-@@ -403,7 +403,7 @@ void Row::PaintCornerBadgeFrame(
- 	q.translate(framePadding, framePadding);
- 	auto hq = std::optional<PainterHighQualityEnabler>();
- 	const auto photoSize = context.st->photoSize;
--	const auto storiesCount = data->storiesCount;
-+	const auto storiesCount = 0;
- 	if (storiesCount) {
- 		hq.emplace(q);
- 		const auto line = st::dialogsStoriesFull.lineTwice / 2.;
-diff --git a/Telegram/SourceFiles/dialogs/dialogs_widget.cpp b/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
-index ec971de510..c27c210d54 100644
---- a/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
-+++ b/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
-@@ -367,12 +367,7 @@ Widget::Widget(
- 	object_ptr<Ui::IconButton>(this, st::dialogsLock))
- , _scroll(this)
- , _scrollToTop(_scroll, st::dialogsToUp)
--, _stories((_layout != Layout::Child)
--	? std::make_unique<Stories::List>(
--		this,
--		st::dialogsStoriesList,
--		_storiesContents.events() | rpl::flatten_latest())
--	: nullptr)
-+, _stories(nullptr)
- , _searchTimer([=] { search(); })
- , _peerSearch(&controller->session(), Api::PeerSearch::Type::WithSponsored)
- , _singleMessageSearch(&controller->session()) {
-@@ -723,7 +718,7 @@ Widget::Widget(
- 	}
- 
- 	setupFrozenAccountBar();
--	setupTopBarSuggestions();
-+	// setupTopBarSuggestions();
- }
- 
- void Widget::setupSwipeBack() {
-diff --git a/Telegram/SourceFiles/info/profile/info_profile_widget.cpp b/Telegram/SourceFiles/info/profile/info_profile_widget.cpp
-index d9d24bed01..a44c04e696 100644
---- a/Telegram/SourceFiles/info/profile/info_profile_widget.cpp
-+++ b/Telegram/SourceFiles/info/profile/info_profile_widget.cpp
-@@ -207,10 +207,6 @@ rpl::producer<QString> Widget::title() {
- }
- 
- rpl::producer<Dialogs::Stories::Content> Widget::titleStories() {
--	const auto peer = controller()->key().peer();
--	if (peer && !peer->isChat()) {
--		return Dialogs::Stories::LastForPeer(peer);
--	}
- 	return nullptr;
- }
- 
 diff --git a/Telegram/SourceFiles/api/api_transcribes.cpp b/Telegram/SourceFiles/api/api_transcribes.cpp
-index 7c6b271ca5..2622d00199 100644
+index 7c6b271ca5..170420b0c0 100644
 --- a/Telegram/SourceFiles/api/api_transcribes.cpp
 +++ b/Telegram/SourceFiles/api/api_transcribes.cpp
 @@ -12,6 +12,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
@@ -142,18 +40,22 @@ index 7c6b271ca5..2622d00199 100644
  bool Transcribes::isRated(not_null<HistoryItem*> item) const {
  	const auto fullId = item->fullId();
  	for (const auto &[transcribeId, id] : _ids) {
-@@ -108,6 +125,10 @@ void Transcribes::toggle(not_null<HistoryItem*> item) {
+@@ -108,10 +125,11 @@ void Transcribes::toggle(not_null<HistoryItem*> item) {
  		load(item);
  		_session->data().requestItemResize(item);
  	} else if (!i->second.requestId) {
+-		i->second.shown = !i->second.shown;
+-		if (i->second.roundview) {
+-			_session->data().requestItemViewRefresh(item);
 +		if (i->second.failed || i->second.result.startsWith("Downloading audio")) {
 +			load(item);
 +			return;
-+		}
- 		i->second.shown = !i->second.shown;
- 		if (i->second.roundview) {
- 			_session->data().requestItemViewRefresh(item);
-@@ -174,7 +195,111 @@ void Transcribes::load(not_null<HistoryItem*> item) {
+ 		}
++		i->second.shown = !i->second.shown;
+ 		_session->data().requestItemResize(item);
+ 	}
+ }
+@@ -174,7 +192,130 @@ void Transcribes::load(not_null<HistoryItem*> item) {
  	if (!item->isHistoryEntry() || item->isLocal()) {
  		return;
  	}
@@ -169,7 +71,11 @@ index 7c6b271ca5..2622d00199 100644
 +	}
 +
 +	const auto id = item->fullId();
-+	QString tempPath = QDir::tempPath() + "/tg_voice_" + QString::number(item->id.bare) + ".ogg";
++	const auto isVideo = document->isVideoMessage();
++	const auto tempPath = QDir::tempPath()
++		+ (isVideo ? "/tg_video_" : "/tg_voice_")
++		+ QString::number(item->id.bare)
++		+ (isVideo ? ".mp4" : ".ogg");
 +
 +	QByteArray fileData;
 +	QFile file(tempPath);
@@ -189,13 +95,23 @@ index 7c6b271ca5..2622d00199 100644
 +		auto timer = new QTimer();
 +		timer->setInterval(500);
 +		QObject::connect(timer, &QTimer::timeout, [=] {
-+			QFile check(tempPath);
-+			if (check.exists() && check.size() > 0) {
++			if (const auto item2 = _session->data().message(id)) {
++				if (const auto doc2 = item2->media() ? item2->media()->document() : nullptr) {
++					if (!doc2->loading()) {
++						QFile check(tempPath);
++						if (check.exists() && check.size() > 0) {
++							timer->stop();
++							timer->deleteLater();
++							loadLocal(item2);
++						}
++					}
++				} else {
++					timer->stop();
++					timer->deleteLater();
++				}
++			} else {
 +				timer->stop();
 +				timer->deleteLater();
-+				if (const auto item2 = _session->data().message(id)) {
-+					loadLocal(item2);
-+				}
 +			}
 +		});
 +		timer->start();
@@ -223,11 +139,15 @@ index 7c6b271ca5..2622d00199 100644
 +	entry.requestId = 0;
 +	entry.shown = true;
 +	entry.pending = true;
++	entry.roundview = isVideo;
 +	entry.result = "Transcribing...";
-+	_session->data().requestItemResize(item);
++	_session->data().requestItemViewRefresh(item);
++	_session->data().requestItemRepaint(item);
 +
 +	QNetworkRequest request(QUrl("http://127.0.0.1:8988/transcribe?item_id=" + QString::number(item->id.bare)));
-+	request.setHeader(QNetworkRequest::ContentTypeHeader, "audio/ogg");
++	request.setHeader(
++		QNetworkRequest::ContentTypeHeader,
++		isVideo ? "video/mp4" : "audio/ogg");
 +	request.setTransferTimeout(120000);
 +
 +	const auto sendRequest = [=] {
@@ -248,7 +168,8 @@ index 7c6b271ca5..2622d00199 100644
 +				e.failed = true;
 +			}
 +			if (const auto item = _session->data().message(id)) {
-+				_session->data().requestItemResize(item);
++				_session->data().requestItemViewRefresh(item);
++				_session->data().requestItemRepaint(item);
 +			}
 +			reply->deleteLater();
 +		});
@@ -266,7 +187,7 @@ index 7c6b271ca5..2622d00199 100644
  		if (const auto media = item->media()) {
  			if (const auto document = media->document()) {
  				if (document->isVideoMessage()) {
-@@ -235,6 +360,7 @@ void Transcribes::load(not_null<HistoryItem*> item) {
+@@ -235,6 +376,7 @@ void Transcribes::load(not_null<HistoryItem*> item) {
  	entry.failed = false;
  	entry.pending = false;
  }
@@ -318,6 +239,93 @@ index 7eef8a4fb6..a483b98dce 100644
  };
  
  } // namespace Api
+diff --git a/Telegram/SourceFiles/data/components/sponsored_messages.cpp b/Telegram/SourceFiles/data/components/sponsored_messages.cpp
+index 4e68421fff..a6f59ccc0c 100644
+--- a/Telegram/SourceFiles/data/components/sponsored_messages.cpp
++++ b/Telegram/SourceFiles/data/components/sponsored_messages.cpp
+@@ -239,25 +239,14 @@ void SponsoredMessages::inject(
+ }
+ 
+ bool SponsoredMessages::canHaveFor(not_null<History*> history) const {
+-	if (history->peer->isChannel()) {
+-		return true;
+-	} else if (const auto user = history->peer->asUser()) {
+-		return user->isBot();
+-	}
+ 	return false;
+ }
+ 
+ bool SponsoredMessages::canHaveFor(not_null<HistoryItem*> item) const {
+-	return item->history()->peer->isBroadcast()
+-		&& item->isRegular();
++	return false;
+ }
+ 
+ bool SponsoredMessages::isTopBarFor(not_null<History*> history) const {
+-	if (peerIsUser(history->peer->id)) {
+-		if (const auto user = history->peer->asUser()) {
+-			return user->isBot();
+-		}
+-	}
+ 	return false;
+ }
+ 
+diff --git a/Telegram/SourceFiles/data/data_peer.cpp b/Telegram/SourceFiles/data/data_peer.cpp
+index 2669111e09..a0af4b90c7 100644
+--- a/Telegram/SourceFiles/data/data_peer.cpp
++++ b/Telegram/SourceFiles/data/data_peer.cpp
+@@ -1983,11 +1983,6 @@ const Data::WallPaper *PeerData::wallPaper() const {
+ }
+ 
+ bool PeerData::hasActiveStories() const {
+-	if (const auto user = asUser()) {
+-		return user->hasActiveStories();
+-	} else if (const auto channel = asChannel()) {
+-		return channel->hasActiveStories();
+-	}
+ 	return false;
+ }
+ 
+diff --git a/Telegram/SourceFiles/dialogs/dialogs_row.cpp b/Telegram/SourceFiles/dialogs/dialogs_row.cpp
+index acd8c8cb1c..fe09345089 100644
+--- a/Telegram/SourceFiles/dialogs/dialogs_row.cpp
++++ b/Telegram/SourceFiles/dialogs/dialogs_row.cpp
+@@ -403,7 +403,7 @@ void Row::PaintCornerBadgeFrame(
+ 	q.translate(framePadding, framePadding);
+ 	auto hq = std::optional<PainterHighQualityEnabler>();
+ 	const auto photoSize = context.st->photoSize;
+-	const auto storiesCount = data->storiesCount;
++	const auto storiesCount = 0;
+ 	if (storiesCount) {
+ 		hq.emplace(q);
+ 		const auto line = st::dialogsStoriesFull.lineTwice / 2.;
+diff --git a/Telegram/SourceFiles/dialogs/dialogs_widget.cpp b/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
+index ec971de510..c27c210d54 100644
+--- a/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
++++ b/Telegram/SourceFiles/dialogs/dialogs_widget.cpp
+@@ -367,12 +367,7 @@ Widget::Widget(
+ 	object_ptr<Ui::IconButton>(this, st::dialogsLock))
+ , _scroll(this)
+ , _scrollToTop(_scroll, st::dialogsToUp)
+-, _stories((_layout != Layout::Child)
+-	? std::make_unique<Stories::List>(
+-		this,
+-		st::dialogsStoriesList,
+-		_storiesContents.events() | rpl::flatten_latest())
+-	: nullptr)
++, _stories(nullptr)
+ , _searchTimer([=] { search(); })
+ , _peerSearch(&controller->session(), Api::PeerSearch::Type::WithSponsored)
+ , _singleMessageSearch(&controller->session()) {
+@@ -723,7 +718,7 @@ Widget::Widget(
+ 	}
+ 
+ 	setupFrozenAccountBar();
+-	setupTopBarSuggestions();
++	// setupTopBarSuggestions();
+ }
+ 
+ void Widget::setupSwipeBack() {
 diff --git a/Telegram/SourceFiles/history/view/history_view_transcribe_button.cpp b/Telegram/SourceFiles/history/view/history_view_transcribe_button.cpp
 index d414422435..a6e0d95d53 100644
 --- a/Telegram/SourceFiles/history/view/history_view_transcribe_button.cpp
@@ -346,3 +354,116 @@ index d414422435..a6e0d95d53 100644
  }
  
  void TranscribeButton::setOpened(bool opened, Fn<void()> update) {
+diff --git a/Telegram/SourceFiles/history/view/media/history_view_document.cpp b/Telegram/SourceFiles/history/view/media/history_view_document.cpp
+index cc8ad9f416..e70959bb75 100644
+--- a/Telegram/SourceFiles/history/view/media/history_view_document.cpp
++++ b/Telegram/SourceFiles/history/view/media/history_view_document.cpp
+@@ -315,7 +315,7 @@ Document::Document(
+ 	if (isRound) {
+ 		const auto &entry = _data->session().api().transcribes().entry(
+ 			realParent);
+-		_transcribedRound = entry.shown;
++		_transcribedRound = entry.shown || isRound;
+ 	}
+ 
+ 	createComponents();
+@@ -388,7 +388,7 @@ bool Document::dataLoaded() const {
+ 
+ void Document::createComponents() {
+ 	uint64 mask = 0;
+-	if (_data->isVoiceMessage() || _transcribedRound) {
++	if (_data->isVoiceMessage() || _data->isVideoMessage() || _transcribedRound) {
+ 		mask |= HistoryDocumentVoice::Bit();
+ 	} else {
+ 		mask |= HistoryDocumentNamed::Bit();
+@@ -416,7 +416,7 @@ void Document::createComponents() {
+ 		voice->seekl = !_parent->data()->media()->ttlSeconds()
+ 			? std::make_shared<VoiceSeekClickHandler>(_data, [](FullMsgId) {})
+ 			: nullptr;
+-		if (_transcribedRound) {
++		if (_transcribedRound || _data->isVideoMessage()) {
+ 			voice->round = std::make_unique<::Media::Player::RoundPainter>(
+ 				_realParent);
+ 		}
+@@ -438,12 +438,7 @@ QSize Document::countOptimalSize() {
+ 		const auto transcribes = &session->api().transcribes();
+ 		if (_parent->data()->media()->ttlSeconds()
+ 			|| _realParent->isScheduled()
+-			|| _realParent->isAdminLogEntry()
+-			|| (!session->premium()
+-				&& !transcribes->freeFor(_realParent)
+-				&& !transcribes->trialsSupport())
+-			|| (!session->premium()
+-				&& _data->duration() > transcribes->trialsMaxLengthMs())) {
++			|| _realParent->isAdminLogEntry()) {
+ 			voice->transcribe = nullptr;
+ 			voice->transcribeText = {};
+ 		} else {
+@@ -525,7 +520,7 @@ QSize Document::countOptimalSize() {
+ 	if (thumbed) {
+ 		accumulate_max(maxWidth, tleft + MaxStatusWidth(_data) + tright);
+ 	} else {
+-		auto unread = (_data->isVoiceMessage() || _transcribedRound)
++		auto unread = (_data->isVoiceMessage() || _data->isVideoMessage() || _transcribedRound)
+ 			? (st::mediaUnreadSkip + st::mediaUnreadSize)
+ 			: 0;
+ 		accumulate_max(maxWidth, tleft + MaxStatusWidth(_data) + unread + _parent->skipBlockWidth() + st::msgPadding.right());
+@@ -754,7 +749,7 @@ void Document::draw(
+ 				inner,
+ 				context.selected());
+ 		if (!coverDrawn) {
+-			if (_transcribedRound) {
++			if (_transcribedRound || _data->isVideoMessage()) {
+ 				if (const auto voice = Get<HistoryDocumentVoice>()) {
+ 					if (const auto &round = voice->round) {
+ 						if (round->fillFrame(inner.size())) {
+diff --git a/Telegram/SourceFiles/history/view/media/history_view_gif.cpp b/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
+index 742e5f81ff..619b3752c5 100644
+--- a/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
++++ b/Telegram/SourceFiles/history/view/media/history_view_gif.cpp
+@@ -1347,6 +1347,7 @@ TextState Gif::textState(QPoint point, StateRequest request) const {
+ 			return state;
+ 		}
+ 	}
++
+ 	if (QRect(usex + paintx, painty, usew, painth).contains(point)) {
+ 		ensureDataMediaCreated();
+ 		if (_spoiler && !_spoiler->revealed) {
+@@ -2361,9 +2362,7 @@ void Gif::ensureTranscribeButton() const {
+ 	if (_data->isVideoMessage()
+ 		&& !_parent->data()->media()->ttlSeconds()
+ 		&& !_parent->data()->isScheduled()
+-		&& !_parent->data()->isAdminLogEntry()
+-		&& (_data->session().premium()
+-			|| _data->session().api().transcribes().trialsSupport())) {
++		&& !_parent->data()->isAdminLogEntry()) {
+ 		if (!_transcribe) {
+ 			_transcribe = std::make_unique<TranscribeButton>(
+ 				_realParent,
+diff --git a/Telegram/SourceFiles/history/view/media/history_view_media_common.cpp b/Telegram/SourceFiles/history/view/media/history_view_media_common.cpp
+index b46a9aa0a7..b134f60074 100644
+--- a/Telegram/SourceFiles/history/view/media/history_view_media_common.cpp
++++ b/Telegram/SourceFiles/history/view/media/history_view_media_common.cpp
+@@ -156,6 +156,8 @@ std::unique_ptr<Media> CreateAttach(
+ 					parent,
+ 					document,
+ 					skipPremiumEffect));
++		} else if (document->isVideoMessage()) {
++			return std::make_unique<Document>(parent, parent->data(), document);
+ 		} else if (document->isAnimation() || document->isVideoFile()) {
+ 			return std::make_unique<Gif>(
+ 				parent,
+diff --git a/Telegram/SourceFiles/info/profile/info_profile_widget.cpp b/Telegram/SourceFiles/info/profile/info_profile_widget.cpp
+index d9d24bed01..a44c04e696 100644
+--- a/Telegram/SourceFiles/info/profile/info_profile_widget.cpp
++++ b/Telegram/SourceFiles/info/profile/info_profile_widget.cpp
+@@ -207,10 +207,6 @@ rpl::producer<QString> Widget::title() {
+ }
+ 
+ rpl::producer<Dialogs::Stories::Content> Widget::titleStories() {
+-	const auto peer = controller()->key().peer();
+-	if (peer && !peer->isChat()) {
+-		return Dialogs::Stories::LastForPeer(peer);
+-	}
+ 	return nullptr;
+ }
