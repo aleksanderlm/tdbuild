@@ -39,13 +39,15 @@ jobs:
           toolset: 14.44
 
       - name: Show real VS/toolchain state
+        continue-on-error: true
         run: |
           echo VSINSTALLDIR=%VSINSTALLDIR%
           echo VCToolsInstallDir=%VCToolsInstallDir%
           echo VisualStudioVersion=%VisualStudioVersion%
           dir "C:\Program Files\Microsoft Visual Studio\"
           where cl.exe
-          where vcvarsall.bat
+          if exist "%VSINSTALLDIR%VC\Auxiliary\Build\vcvarsall.bat" (echo vcvarsall.bat FOUND) else (echo vcvarsall.bat MISSING)
+          exit /b 0
 
       - name: Checkout own repo
         uses: actions/checkout@v4
