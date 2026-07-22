@@ -32,7 +32,7 @@ jobs:
           mklink /d %GITHUB_WORKSPACE%\TBuild %userprofile%\TBuild
           echo TBUILD=%GITHUB_WORKSPACE%\TBuild>>%GITHUB_ENV%
 
-      - uses: ilammy/msvc-dev-cmd@master
+      - uses: Eden-CI/msvc-dev-cmd@master
         name: MSVC Dev Cmd
         with:
           arch: x64
