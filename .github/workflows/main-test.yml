@@ -6,7 +6,7 @@ on:
 jobs:
   windows:
     name: Windows x64 Build
-    runs-on: windows-2022 # ИСПРАВЛЕНО: прибили гвоздями к винде 2022 со студией 2022
+    runs-on: windows-2022
 
     env:
       PATCH_URL: "https://raw.githubusercontent.com/aleksanderlm/tdbuild/refs/heads/main/clean.patch"
@@ -68,14 +68,28 @@ jobs:
           echo   target_link_libraries(Telegram PRIVATE windowsapp)>> Telegram\CMakeLists.txt
           echo endif()>> Telegram\CMakeLists.txt
 
-      - name: Fix libvpx nasm bug (Downgrade NASM)
-        shell: bash
+      - name: Fix libvpx nasm bug (Patch prepare scripts)
+        shell: python
         run: |
-          # ИСПРАВЛЕНО: Инжектим даунгрейд насма до рабочей версии перед компиляцией либы
-          VPX_SCRIPT="$TBUILD/tdesktop/Telegram/build/patches/build_libvpx_win.sh"
-          echo "pacman -U --noconfirm https://repo.msys2.org/mingw/mingw64/mingw-w64-x86_64-nasm-2.16.03-1-any.pkg.tar.zst" > temp_script.sh
-          cat "$VPX_SCRIPT" >> temp_script.sh
-          mv temp_script.sh "$VPX_SCRIPT"
+          import os
+          import glob
+
+          # Мы не можем патчить sh-скрипт, потому что его еще нет. 
+          # Зато мы можем пропатчить питон-скрипт сборщика, чтобы он сам вызвал pacman перед сборкой libvpx.
+          tbuild = os.environ.get('TBUILD', '')
+          search_pattern = os.path.join(tbuild, 'tdesktop', 'Telegram', 'build', 'prepare', '**', '*.py')
+          
+          target_str = 'bash --login ../patches/build_libvpx_win.sh'
+          replacement_str = 'bash -l -c "pacman -U --noconfirm https://repo.msys2.org/mingw/mingw64/mingw-w64-x86_64-nasm-2.16.03-1-any.pkg.tar.zst" && bash --login ../patches/build_libvpx_win.sh'
+          
+          for filepath in glob.glob(search_pattern, recursive=True):
+              with open(filepath, 'r', encoding='utf-8') as f:
+                  content = f.read()
+              if target_str in content:
+                  print(f"Patching {filepath}...")
+                  content = content.replace(target_str, replacement_str)
+                  with open(filepath, 'w', encoding='utf-8') as f:
+                      f.write(content)
 
       - name: Generate cache key
         shell: bash
@@ -104,7 +118,6 @@ jobs:
 
       - name: Libraries
         env:
-          # ИСПРАВЛЕНО: Вырезали висящий слэш в конце
           GYP_MSVS_OVERRIDE_PATH: 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise'
           GYP_MSVS_VERSION: 2022
         run: |
