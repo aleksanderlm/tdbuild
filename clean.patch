@@ -502,3 +502,11 @@ index 6f7a339bd3..31020ade11 100644
  	return nullptr;
  }
  
+--- a/Telegram/SourceFiles/core/shortcuts.cpp
++++ b/Telegram/SourceFiles/core/shortcuts.cpp
+@@ -1048,7 +1048,7 @@ auto KeysCurrents()
+ 
+ void ToggleMediaShortcuts(bool toggled) {
+-	Data.toggleMedia(toggled);
++	// Data.toggleMedia(toggled); // don't hijack hardware media keys
+ }
