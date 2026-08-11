@@ -62,7 +62,7 @@ index 7c6b271ca5..c11b9d412a 100644
  		_session->data().requestItemResize(item);
  	}
  }
-@@ -174,8 +191,133 @@ void Transcribes::load(not_null<HistoryItem*> item) {
+@@ -174,7 +190,132 @@ void Transcribes::load(not_null<HistoryItem*> item) {
  	if (!item->isHistoryEntry() || item->isLocal()) {
  		return;
  	}
@@ -193,7 +193,7 @@ index 7c6b271ca5..c11b9d412a 100644
 +
 +/*
 +void Transcribes::load_original(not_null<HistoryItem*> item) {
-@@ -235,6 +377,7 @@ void Transcribes::load(not_null<HistoryItem*> item) {
+@@ -235,6 +376,7 @@ void Transcribes::load(not_null<HistoryItem*> item) {
  	entry.failed = false;
  	entry.pending = false;
  }
