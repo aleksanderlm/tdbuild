@@ -40,18 +40,14 @@ index 7c6b271ca5..c11b9d412a 100644
  bool Transcribes::isRated(not_null<HistoryItem*> item) const {
  	const auto fullId = item->fullId();
  	for (const auto &[transcribeId, id] : _ids) {
-@@ -96,9 +113,7 @@ int Transcribes::trialsCount() {
- }
- 
+@@ -96,5 +113,3 @@ int Transcribes::trialsCount() {
  crl::time Transcribes::trialsMaxLengthMs() const {
 -	return 1000 * _session->appConfig().get<int>(
 -		u"transcribe_audio_trial_duration_max"_q,
 -		300);
 +	return 24 * 60 * 60 * 1000LL;
  }
- 
- void Transcribes::toggle(not_null<HistoryItem*> item) {
-@@ -108,10 +123,11 @@ void Transcribes::toggle(not_null<HistoryItem*> item) {
+@@ -108,9 +123,11 @@ void Transcribes::toggle(not_null<HistoryItem*> item) {
  		load(item);
  		_session->data().requestItemResize(item);
  	} else if (!i->second.requestId) {
@@ -66,7 +62,7 @@ index 7c6b271ca5..c11b9d412a 100644
  		_session->data().requestItemResize(item);
  	}
  }
-@@ -174,7 +190,132 @@ void Transcribes::load(not_null<HistoryItem*> item) {
+@@ -174,8 +191,133 @@ void Transcribes::load(not_null<HistoryItem*> item) {
  	if (!item->isHistoryEntry() || item->isLocal()) {
  		return;
  	}
@@ -197,10 +193,7 @@ index 7c6b271ca5..c11b9d412a 100644
 +
 +/*
 +void Transcribes::load_original(not_null<HistoryItem*> item) {
- 		if (const auto media = item->media()) {
- 			if (const auto document = media->document()) {
- 				if (document->isVideoMessage()) {
-@@ -235,6 +376,7 @@ void Transcribes::load(not_null<HistoryItem*> item) {
+@@ -235,6 +377,7 @@ void Transcribes::load(not_null<HistoryItem*> item) {
  	entry.failed = false;
  	entry.pending = false;
  }
@@ -256,7 +249,7 @@ diff --git a/Telegram/SourceFiles/data/components/sponsored_messages.cpp b/Teleg
 index 40c00c4bb4..d9f005df85 100644
 --- a/Telegram/SourceFiles/data/components/sponsored_messages.cpp
 +++ b/Telegram/SourceFiles/data/components/sponsored_messages.cpp
-@@ -239,25 +239,14 @@ void SponsoredMessages::inject(
+@@ -239,22 +239,13 @@ void SponsoredMessages::inject(
  }
  
  bool SponsoredMessages::canHaveFor(not_null<History*> history) const {
@@ -282,12 +275,11 @@ index 40c00c4bb4..d9f005df85 100644
 -	}
  	return false;
  }
- 
 diff --git a/Telegram/SourceFiles/data/data_peer.cpp b/Telegram/SourceFiles/data/data_peer.cpp
 index 3fb4d7781d..cee93d5a70 100644
 --- a/Telegram/SourceFiles/data/data_peer.cpp
 +++ b/Telegram/SourceFiles/data/data_peer.cpp
-@@ -2003,11 +2003,6 @@ const Data::WallPaper *PeerData::wallPaper() const {
+@@ -2003,10 +2003,5 @@ const Data::WallPaper *PeerData::wallPaper() const {
  }
  
  bool PeerData::hasActiveStories() const {
@@ -298,7 +290,6 @@ index 3fb4d7781d..cee93d5a70 100644
 -	}
  	return false;
  }
- 
 diff --git a/Telegram/SourceFiles/dialogs/dialogs_row.cpp b/Telegram/SourceFiles/dialogs/dialogs_row.cpp
 index 79a1fb2d1f..9988f55d5c 100644
 --- a/Telegram/SourceFiles/dialogs/dialogs_row.cpp
@@ -503,10 +494,10 @@ index 6f7a339bd3..31020ade11 100644
  }
  
 diff --git a/Telegram/SourceFiles/core/shortcuts.cpp b/Telegram/SourceFiles/core/shortcuts.cpp
-index XXXXXXX..XXXXXXX 100644
+index 0000000000..1111111111 100644
 --- a/Telegram/SourceFiles/core/shortcuts.cpp
 +++ b/Telegram/SourceFiles/core/shortcuts.cpp
-@@ -1048,6 +1048,6 @@ auto KeysCurrents()
+@@ -1048,5 +1048,5 @@ auto KeysCurrents()
  
  void ToggleMediaShortcuts(bool toggled) {
 -	Data.toggleMedia(toggled);
