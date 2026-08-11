@@ -419,9 +419,10 @@ index 51b786de86..026b2848e7 100644
  			voice->round = std::make_unique<::Media::Player::RoundPainter>(
  				_realParent);
  		}
-@@ -500,12 +500,7 @@ QSize Document::countOptimalSize() {
+@@ -501,13 +501,8 @@ QSize Document::countOptimalSize() {
  		const auto media = _parent->data()->media();
  		if ((media && media->ttlSeconds())
+ 			|| IsHostedInstantViewMedia(_parent)
  			|| _realParent->isScheduled()
 -			|| _realParent->isAdminLogEntry()
 -			|| (!session->premium()
@@ -506,9 +507,13 @@ diff --git a/Telegram/SourceFiles/core/shortcuts.cpp b/Telegram/SourceFiles/core
 index 0000000000..1111111111 100644
 --- a/Telegram/SourceFiles/core/shortcuts.cpp
 +++ b/Telegram/SourceFiles/core/shortcuts.cpp
-@@ -1048,5 +1048,5 @@ auto KeysCurrents()
+@@ -978,7 +978,7 @@ bool CheckChatSwitchEvent(Qt::Key key) {
+ 	return false;
+ }
  
  void ToggleMediaShortcuts(bool toggled) {
 -	Data.toggleMedia(toggled);
 +	// Data.toggleMedia(toggled); // don't hijack hardware media keys
  }
+ 
+ void ToggleSupportShortcuts(bool toggled) {
