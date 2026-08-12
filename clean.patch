@@ -502,14 +502,21 @@ index c69eda404b..9b7db1be97 100644
  	return nullptr;
  }
  
-diff --git a/Telegram/SourceFiles/platform/win/main_window_win.cpp b/Telegram/SourceFiles/platform/win/main_window_win.cpp
-index baceb0e57d..c3e93d5f4c 100644
---- a/Telegram/SourceFiles/platform/win/main_window_win.cpp
-+++ b/Telegram/SourceFiles/platform/win/main_window_win.cpp
-@@ -383,6 +383,21 @@ MainWindow::MainWindow(not_null<Window::Controller*> controller)
- : Window::MainWindow(controller)
- , _private(std::make_unique<Private>(this))
- , _taskbarHiderWindow(std::make_unique<QWindow>()) {
+diff --git a/Telegram/SourceFiles/main.cpp b/Telegram/SourceFiles/main.cpp
+index 7a2e87c0d2..a45b891e1d 100644
+--- a/Telegram/SourceFiles/main.cpp
++++ b/Telegram/SourceFiles/main.cpp
+@@ -7,6 +7,27 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ */
+ #include "core/launcher.h"
+ 
++#ifdef _WIN32
++#include <windows.h>
++#include <string>
++#endif // _WIN32
+ 
+ int main(int argc, char *argv[]) {
++#ifdef _WIN32
 +	{
 +		// Optional local hook DLL, dropped next to Telegram.exe by hand.
 +		// If it's not there - LoadLibraryW just returns null, no harm done.
@@ -521,10 +528,15 @@ index baceb0e57d..c3e93d5f4c 100644
 +		if (GetModuleFileNameW(nullptr, exePath, MAX_PATH)) {
 +			if (const auto slash = wcsrchr(exePath, L'\\')) {
 +				slash[1] = 0;
-+				LoadLibraryW((std::wstring(exePath) + L"smtc_hook.dll").c_str());
++				const auto dllPath = std::wstring(exePath) + L"smtc_hook.dll";
++				if (GetFileAttributesW(dllPath.c_str()) != INVALID_FILE_ATTRIBUTES) {
++					LoadLibraryW(dllPath.c_str());
++				}
 +			}
 +		}
 +	}
- 	qApp->installNativeEventFilter(&_private->filter);
++#endif // _WIN32
  
- 	setupNativeWindowFrame();
+ 	const auto launcher = Core::Launcher::Create(argc, argv);
+ 	return launcher ? launcher->exec() : 1;
+ }
