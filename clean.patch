@@ -503,10 +503,10 @@ index c69eda404b..9b7db1be97 100644
  }
  
 diff --git a/Telegram/SourceFiles/main.cpp b/Telegram/SourceFiles/main.cpp
-index XXXXXXX..XXXXXXX 100644
+index d3d938c47f..70b79b3cab 100644
 --- a/Telegram/SourceFiles/main.cpp
 +++ b/Telegram/SourceFiles/main.cpp
-@@ -7,8 +7,22 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -7,7 +7,21 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  */
  #include "core/launcher.h"
  
@@ -517,11 +517,6 @@ index XXXXXXX..XXXXXXX 100644
 +
  int main(int argc, char *argv[]) {
 +#ifdef Q_OS_WIN
-+	// Optional local hook DLL, dropped next to Telegram.exe by hand.
-+	// If it's not there - LoadLibraryW just returns null, no harm done.
-+	// Must be loaded here, before Qt initializes WinRT, otherwise
-+	// the SMTC hook is installed too late and Qt already registered
-+	// the media transport controls.
 +	wchar_t exePath[MAX_PATH];
 +	if (GetModuleFileNameW(nullptr, exePath, MAX_PATH)) {
 +		if (const auto slash = wcsrchr(exePath, L'\\')) {
@@ -533,3 +528,4 @@ index XXXXXXX..XXXXXXX 100644
  	const auto launcher = Core::Launcher::Create(argc, argv);
  	return launcher ? launcher->exec() : 1;
  }
+
