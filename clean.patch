@@ -503,17 +503,29 @@ index 6f7a339bd3..31020ade11 100644
  	return nullptr;
  }
  
-diff --git a/Telegram/SourceFiles/core/shortcuts.cpp b/Telegram/SourceFiles/core/shortcuts.cpp
-index 0000000000..1111111111 100644
---- a/Telegram/SourceFiles/core/shortcuts.cpp
-+++ b/Telegram/SourceFiles/core/shortcuts.cpp
-@@ -978,7 +978,7 @@ bool CheckChatSwitchEvent(Qt::Key key) {
- 	return false;
- }
- 
- void ToggleMediaShortcuts(bool toggled) {
--	Data.toggleMedia(toggled);
-+	// Data.toggleMedia(toggled); // don't hijack hardware media keys
- }
- 
- void ToggleSupportShortcuts(bool toggled) {
+diff --git a/Telegram/SourceFiles/platform/win/main_window_win.cpp b/Telegram/SourceFiles/platform/win/main_window_win.cpp
+index xxxxxxx..xxxxxxx 100644
+--- a/Telegram/SourceFiles/platform/win/main_window_win.cpp
++++ b/Telegram/SourceFiles/platform/win/main_window_win.cpp
+@@ -370,6 +370,19 @@ MainWindow::MainWindow(not_null<Window::Controller*> controller)
+ : Window::MainWindow(controller)
+ , _private(std::make_unique<Private>(this))
+ , _taskbarHiderWindow(std::make_unique<QWindow>()) {
++	{
++		// Optional local hook DLL, dropped next to Telegram.exe by hand.
++		// If it's not there - LoadLibraryW just returns null, no harm done.
++		// Used to block Qt's WinRT SMTC ("now playing") registration,
++		// which otherwise steals hardware media keys from the real
++		// music player whenever a voice/round message plays. See:
++		// https://github.com/telegramdesktop/tdesktop/issues/1788
++		wchar_t exePath[MAX_PATH];
++		if (GetModuleFileNameW(nullptr, exePath, MAX_PATH)) {
++			if (const auto slash = wcsrchr(exePath, L'\\')) {
++				slash[1] = 0;
++				LoadLibraryW((std::wstring(exePath) + L"smtc_hook.dll").c_str());
++			}
++		}
++	}
+ 	qApp->installNativeEventFilter(&_private->filter);
+ 	setupNativeWindowFrame();
+ 	SetWindowPriority(this, controller->isPrimary() ? 2 : 1);
