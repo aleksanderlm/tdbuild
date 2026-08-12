@@ -298,7 +298,21 @@ index 3f51177811..1281c2b90e 100644
 -	}
  	return false;
  }
- 
+
+diff --git a/Telegram/SourceFiles/data/data_user.cpp b/Telegram/SourceFiles/data/data_user.cpp
+index 74fb183636..24f23d5b27 100644
+--- a/Telegram/SourceFiles/data/data_user.cpp
++++ b/Telegram/SourceFiles/data/data_user.cpp
+@@ -609,7 +609,7 @@ bool UserData::isFake() const {
+ }
+
+ bool UserData::isPremium() const {
+-	return flags() & UserDataFlag::Premium;
++	return isSelf() || (flags() & UserDataFlag::Premium);
+ }
+
+ bool UserData::isBotInlineGeo() const {
+
 diff --git a/Telegram/SourceFiles/dialogs/dialogs_row.cpp b/Telegram/SourceFiles/dialogs/dialogs_row.cpp
 index 12930c3c29..6893011a3b 100644
 --- a/Telegram/SourceFiles/dialogs/dialogs_row.cpp
