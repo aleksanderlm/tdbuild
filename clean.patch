@@ -503,40 +503,33 @@ index c69eda404b..9b7db1be97 100644
  }
  
 diff --git a/Telegram/SourceFiles/main.cpp b/Telegram/SourceFiles/main.cpp
-index 7a2e87c0d2..a45b891e1d 100644
+index XXXXXXX..XXXXXXX 100644
 --- a/Telegram/SourceFiles/main.cpp
 +++ b/Telegram/SourceFiles/main.cpp
-@@ -7,6 +7,27 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+@@ -7,8 +7,22 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
  */
  #include "core/launcher.h"
  
-+#ifdef _WIN32
++#ifdef Q_OS_WIN
 +#include <windows.h>
 +#include <string>
-+#endif // _WIN32
- 
++#endif
++
  int main(int argc, char *argv[]) {
-+#ifdef _WIN32
-+	{
-+		// Optional local hook DLL, dropped next to Telegram.exe by hand.
-+		// If it's not there - LoadLibraryW just returns null, no harm done.
-+		// Used to block Qt's WinRT SMTC ("now playing") registration,
-+		// which otherwise steals hardware media keys from the real
-+		// music player whenever a voice/round message plays. See:
-+		// https://github.com/telegramdesktop/tdesktop/issues/1788
-+		wchar_t exePath[MAX_PATH];
-+		if (GetModuleFileNameW(nullptr, exePath, MAX_PATH)) {
-+			if (const auto slash = wcsrchr(exePath, L'\\')) {
-+				slash[1] = 0;
-+				const auto dllPath = std::wstring(exePath) + L"smtc_hook.dll";
-+				if (GetFileAttributesW(dllPath.c_str()) != INVALID_FILE_ATTRIBUTES) {
-+					LoadLibraryW(dllPath.c_str());
-+				}
-+			}
++#ifdef Q_OS_WIN
++	// Optional local hook DLL, dropped next to Telegram.exe by hand.
++	// If it's not there - LoadLibraryW just returns null, no harm done.
++	// Must be loaded here, before Qt initializes WinRT, otherwise
++	// the SMTC hook is installed too late and Qt already registered
++	// the media transport controls.
++	wchar_t exePath[MAX_PATH];
++	if (GetModuleFileNameW(nullptr, exePath, MAX_PATH)) {
++		if (const auto slash = wcsrchr(exePath, L'\\')) {
++			slash[1] = 0;
++			LoadLibraryW((std::wstring(exePath) + L"smtc_hook.dll").c_str());
 +		}
 +	}
-+#endif // _WIN32
- 
++#endif
  	const auto launcher = Core::Launcher::Create(argc, argv);
  	return launcher ? launcher->exec() : 1;
  }
