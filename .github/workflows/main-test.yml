@@ -74,14 +74,14 @@ jobs:
           import os
           import glob
 
-          # Мы не можем патчить sh-скрипт, потому что его еще нет. 
+          # Мы не можем патчить sh-скрипт, потому что его еще нет.
           # Зато мы можем пропатчить питон-скрипт сборщика, чтобы он сам вызвал pacman перед сборкой libvpx.
           tbuild = os.environ.get('TBUILD', '')
           search_pattern = os.path.join(tbuild, 'tdesktop', 'Telegram', 'build', 'prepare', '**', '*.py')
-          
+
           target_str = 'bash --login ../patches/build_libvpx_win.sh'
           replacement_str = 'bash -l -c "pacman -U --noconfirm https://repo.msys2.org/mingw/mingw64/mingw-w64-x86_64-nasm-2.16.03-1-any.pkg.tar.zst" && bash --login ../patches/build_libvpx_win.sh'
-          
+
           for filepath in glob.glob(search_pattern, recursive=True):
               with open(filepath, 'r', encoding='utf-8') as f:
                   content = f.read()
@@ -155,7 +155,6 @@ jobs:
           set OUT=%TBUILD%\tdesktop\out\Release
           mkdir artifact
           move %OUT%\Telegram.exe artifact\
-          
 
       - uses: actions/upload-artifact@v4
         name: Upload artifact
@@ -164,15 +163,13 @@ jobs:
           name: ${{ env.ARTIFACT_NAME }}
           path: artifact\
 
-      - name: Create release tag
+      # Тег больше не пушим руками — softprops/action-gh-release сам создаёт
+      # тег и релиз одним атомарным вызовом API, поэтому race condition
+      # ("Release is not yet discoverable by tag") больше не возникает.
+      - name: Set release tag var
         if: (env.UPLOAD_ARTIFACT == 'true') || (github.ref == 'refs/heads/nightly')
         shell: bash
-        run: |
-          TAG="build-$(date +'%Y%m%d-%H%M%S')"
-          echo "RELEASE_TAG=$TAG" >> $GITHUB_ENV
-          cd self
-          git tag "$TAG"
-          git push origin "$TAG"
+        run: echo "RELEASE_TAG=build-$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_ENV
 
       - name: Create GitHub Release
         if: (env.UPLOAD_ARTIFACT == 'true') || (github.ref == 'refs/heads/nightly')
@@ -184,6 +181,5 @@ jobs:
           prerelease: ${{ github.ref == 'refs/heads/nightly' }}
           files: |
             artifact/Telegram.exe
-            artifact/Updater.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
